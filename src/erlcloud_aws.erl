@@ -19,7 +19,7 @@
          http_body/1,
          request_to_return/1,
          sign_v4_headers/5,
-         sign_v4/8,
+         sign_v4/8, sign_v4/9,
          get_service_status/1,
          is_throttling_error_response/1,
          get_timeout/1,
@@ -996,6 +996,10 @@ sign_v4_headers(Config, Headers, Payload, Region, Service) ->
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
     Date = iso_8601_basic_time(),
+    sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date).
+
+-spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
+sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date) ->
     {PayloadHash, Headers1} =
         sign_v4_content_sha256_header( [{"x-amz-date", Date} | Headers], Payload ),
     Headers2 = case Config#aws_config.security_token of
