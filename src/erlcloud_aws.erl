@@ -1000,8 +1000,17 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date) ->
+
+% use passed-in x-amz-date header or create one
+Headers0 = case proplists:get_value("x-amz-date", Headers) of
+               undefined ->
+                   [{"x-amz-date", Date} | Headers];
+               _ ->
+                   Headers
+           end,
+
     {PayloadHash, Headers1} =
-        sign_v4_content_sha256_header( [{"x-amz-date", Date} | Headers], Payload ),
+        sign_v4_content_sha256_header( Headers0, Payload ),
     Headers2 = case Config#aws_config.security_token of
                    undefined -> Headers1;
                    Token -> [{"x-amz-security-token", Token} | Headers1]
