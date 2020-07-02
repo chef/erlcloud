@@ -36,7 +36,6 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 -include_lib("lhttpc/include/lhttpc_types.hrl").
--include_lib("eunit/include/eunit.hrl").
 
 -define(ERLCLOUD_RETRY_TIMEOUT, 10000).
 -define(GREGORIAN_EPOCH_OFFSET, 62167219200).
@@ -1001,15 +1000,15 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
 sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date0) ->
-
-% use passed-in x-amz-date header or create one
-Headers0 = case proplists:get_value("x-amz-date", Headers) of
-               undefined ->
-                   Date = Date0,
-                   [{"x-amz-date", Date0} | Headers];
-               Date ->
-                   Headers
-           end,
+    % use passed-in x-amz-date header or create one
+    Headers0 =
+        case proplists:get_value("x-amz-date", Headers) of
+            undefined ->
+                Date = Date0,
+                [{"x-amz-date", Date0} | Headers];
+            Date ->
+                Headers
+        end,
 
     {PayloadHash, Headers1} =
         sign_v4_content_sha256_header( Headers0, Payload ),
@@ -1057,13 +1056,13 @@ canonical_request(Method, CanonicalURI, QParams, Headers, PayloadHash) ->
 sign_v4_content_sha256_header( Headers, Payload ) ->
     case proplists:get_value( "x-amz-content-sha256", Headers ) of
         undefined ->
-            %PayloadHash = hash_encode(Payload),
-PayloadHash = case hash_encode(Payload) of
-                  [String] ->
-                      String;
-                  Whatever ->
-                      Whatever
-              end,
+            PayloadHash =
+                case hash_encode(Payload) of
+                    [String] ->
+                        String;
+                    Whatever ->
+                        Whatever
+                end,
             NewHeaders = [{"x-amz-content-sha256", PayloadHash} | Headers],
             {PayloadHash, NewHeaders};
         PayloadHash -> {PayloadHash, Headers}

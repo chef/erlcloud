@@ -68,7 +68,6 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
--include_lib("eunit/include/eunit.hrl").
 
 %%% Note that get_bucket_and_key/1 may be used to obtain the Bucket and Key to pass to various
 %%%   functions here, from a URL such as https://s3.amazonaws.com/some_bucket/path_to_file
@@ -1151,41 +1150,20 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0
     Date = erlcloud_aws:iso_8601_basic_time(),
     make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date, Config).
 
-% Headers0: [{key, val}...] where key is a casefolded string
+% Headers0: [{"casefolded-string", val}...]
 -spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist(), proplist(), string(), aws_config()) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date, Config) when is_integer(ExpireTime) ->
     {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
 
-    % WHOOPS - this only works with erlang 21+
     % if a host header was passed in, use that; otherwise default to config
-    %{Host, Headers1} =
-    %    case lists:search(fun({Key0, _}) -> string:casefold(Key0) == "host" end, Headers0) of
-    %        {_, {_, Host1}} -> {Host1, lists:filter(fun({Key0, _}) -> string:casefold(Key0) /= "host" end, Headers0)};
-    %        false           -> {Host0, Headers0}
-    %    end,
-
-    % if a host header was passed in, use that; otherwise default to config
-    %Headers1 = [{string:casefold(K), V} || {K, V} <- Headers0],
-    %{Host, Headers2} =
-    %    case lists:keytake("host", 1, Headers1) of
-    %        {_, {_, Host00}, Headers22}  -> {Host00, Headers22};
-    %        false -> {Host0, Headers1}
-    %    end,
-
-    % the header key in {key, value} should be casefolded; however, to avoid
-    % duplicating this work it should be done (as is sometimes necessary)
-    % before calling this function.
-    %Headers1 = [{string:casefold(K), V} || {K, V} <- Headers0],
-
     HostHeader =
         case lists:any(fun({"host", _}) -> true; (_) -> false end, Headers0) of
             true -> [];
             _    -> [{"host", lists:flatten([Host, port_spec(Config)])}]
         end,
 
-    %Headers = lists:keysort(1, [{"host", Host} | Headers2]),
     Headers = lists:keysort(1, HostHeader ++ Headers0),
     SignedHeaders = string:join([element(1, X) || X <- Headers], ";"),
 
@@ -1921,12 +1899,11 @@ s3_request(Config, Method, Host, Path, Subreasource, Params, POSTData, Headers) 
 %% s3_request2 returns {ok, Body} or {error, Reason} instead of throwing as s3_request does
 %% This is the preferred pattern for new APIs
 s3_request2(Config, Method, Bucket, Path, Subresource, Params, POSTData, Headers0) ->
-
-Headers = case proplists:get_value("content-type", Headers0) of
-              undefined -> [{"content-type", "text/xml"} | Headers0];
-              _         -> Headers0
-          end,
-
+    Headers =
+        case proplists:get_value("content-type", Headers0) of
+            undefined -> [{"content-type", "text/xml"} | Headers0];
+            _         -> Headers0
+        end,
     case erlcloud_aws:update_config(Config) of
         {ok, Config1} ->
             case s3_request4_no_update(Config1, Method, Bucket, Path,
