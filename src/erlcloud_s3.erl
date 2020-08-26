@@ -1126,7 +1126,7 @@ signature(Config, Path, Date, Region, Method, QueryParams, Headers, Payload) ->
   [Result] = erlcloud_aws:base16(erlcloud_util:sha256_mac(SigningKey, ToSign)),
   Result.
 
--spec make_presigned_v4_url(integer(), string(), atom(), string(), proplist()) -> {ok, string()} | {error, term()}.
+-spec make_presigned_v4_url(integer(), string(), atom(), string(), [atom() | tuple()]) -> string().
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, Params) ->
   make_presigned_v4_url(ExpireTime, BucketName, Method, Key, Params, default_config()).
 
