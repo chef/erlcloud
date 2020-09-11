@@ -17,6 +17,8 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 
+-include_lib("eunit/include/eunit.hrl").
+
 %% Helpers
 -export([backoff/1,
          no_retry/1,

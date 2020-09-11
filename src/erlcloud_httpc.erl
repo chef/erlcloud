@@ -11,6 +11,8 @@
 
 -include("erlcloud_aws.hrl").
 
+-include_lib("eunit/include/eunit.hrl").
+
 -export([request/6]).
 
 -type request_fun() :: 

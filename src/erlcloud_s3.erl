@@ -68,6 +68,7 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 %%% Note that get_bucket_and_key/1 may be used to obtain the Bucket and Key to pass to various
 %%%   functions here, from a URL such as https://s3.amazonaws.com/some_bucket/path_to_file
@@ -1155,9 +1156,7 @@ make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0
 make_presigned_v4_url(ExpireTime, BucketName, Method, Key, QueryParams, Headers0, Date, Config) when is_integer(ExpireTime) ->
     {Host, Path, URL} = get_object_url_elements(BucketName, Key, Config),
     Region = erlcloud_aws:aws_region_from_host(Config#aws_config.s3_host),
-
     Credential = erlcloud_aws:credential(Config, Date, Region, "s3"),
-
 
     % WHOOPS - this only works with erlang 21+
     % if a host header was passed in, use that; otherwise default to config
@@ -1921,7 +1920,13 @@ s3_request(Config, Method, Host, Path, Subreasource, Params, POSTData, Headers) 
 
 %% s3_request2 returns {ok, Body} or {error, Reason} instead of throwing as s3_request does
 %% This is the preferred pattern for new APIs
-s3_request2(Config, Method, Bucket, Path, Subresource, Params, POSTData, Headers) ->
+s3_request2(Config, Method, Bucket, Path, Subresource, Params, POSTData, Headers0) ->
+
+Headers = case proplists:get_value("content-type", Headers0) of
+              undefined -> [{"content-type", "text/xml"} | Headers0];
+              _         -> Headers0
+          end,
+
     case erlcloud_aws:update_config(Config) of
         {ok, Config1} ->
             case s3_request4_no_update(Config1, Method, Bucket, Path,

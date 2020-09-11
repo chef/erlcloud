@@ -36,6 +36,7 @@
 -include("erlcloud.hrl").
 -include("erlcloud_aws.hrl").
 -include_lib("lhttpc/include/lhttpc_types.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 -define(ERLCLOUD_RETRY_TIMEOUT, 10000).
 -define(GREGORIAN_EPOCH_OFFSET, 62167219200).
@@ -999,13 +1000,14 @@ sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams) ->
     sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date).
 
 -spec sign_v4(atom(), list(), aws_config(), headers(), string() | binary(), string(), string(), list(), string()) -> headers().
-sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date) ->
+sign_v4(Method, Uri, Config, Headers, Payload, Region, Service, QueryParams, Date0) ->
 
 % use passed-in x-amz-date header or create one
 Headers0 = case proplists:get_value("x-amz-date", Headers) of
                undefined ->
-                   [{"x-amz-date", Date} | Headers];
-               _ ->
+                   Date = Date0,
+                   [{"x-amz-date", Date0} | Headers];
+               Date ->
                    Headers
            end,
 
