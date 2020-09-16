@@ -1052,17 +1052,10 @@ canonical_request(Method, CanonicalURI, QParams, Headers, PayloadHash) ->
       PayloadHash],
      SignedHeaders}.
 
-% TODO: revisit changes here (necessary or not?)
 sign_v4_content_sha256_header( Headers, Payload ) ->
     case proplists:get_value( "x-amz-content-sha256", Headers ) of
         undefined ->
-            PayloadHash =
-                case hash_encode(Payload) of
-                    [String] ->
-                        String;
-                    Whatever ->
-                        Whatever
-                end,
+            PayloadHash = hash_encode(Payload),
             NewHeaders = [{"x-amz-content-sha256", PayloadHash} | Headers],
             {PayloadHash, NewHeaders};
         PayloadHash -> {PayloadHash, Headers}
