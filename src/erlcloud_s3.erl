@@ -63,6 +63,7 @@
 -export([create_notification_xml/1]).
 -export([create_notification_param_xml/2]).
 -export([encode_inventory/1]).
+-export([signature/8]).
 -endif.
 
 -include("erlcloud.hrl").
