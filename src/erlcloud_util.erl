@@ -22,11 +22,11 @@
 -define(MAX_ITEMS, 1000).
 
 sha_mac(K, S) ->
-    crypto:hmac(sha, K, S).
+    crypto:mac(hmac, sha, K, S).
 
 
 sha256_mac(K, S) ->
-    crypto:hmac(sha256, K, S).
+    crypto:mac(hmac, sha256, K, S).
 
 sha256(V) ->
     crypto:hash(sha256, V).
