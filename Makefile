@@ -22,11 +22,20 @@ run:
 check_warnings:
 	@$(REBAR) as warnings compile
 
-warnings:
+warnings: deps
+ifeq ($(REBAR_VSN),2)
+	@WARNINGS_AS_ERRORS=true $(REBAR) compile
+	@AWS_DEFAULT_REGION=us-east-1 WARNINGS_AS_ERRORS=true $(REBAR) compile_only=true eunit
+else
 	@$(REBAR) as test compile
 
-eunit:
-	@ERL_FLAGS="-config $(PWD)/eunit" $(REBAR) eunit
+eunit: deps
+ifeq ($(REBAR_VSN),2)
+	$(MAKE) compile
+	@AWS_DEFAULT_REGION=us-east-1 $(REBAR) eunit skip_deps=true
+else
+	@AWS_DEFAULT_REGION=us-east-1 ERL_FLAGS="-config $(PWD)/eunit" $(REBAR) eunit
+endif
 
 .dialyzer_plt:
 	dialyzer --build_plt -r _build/default \
@@ -34,7 +43,16 @@ eunit:
 		--fullpath \
 		--output_plt .dialyzer_plt
 
-check: .dialyzer_plt
+check: deps
+ifeq ($(REBAR_VSN),2)
+	$(MAKE) compile
+	@AWS_DEFAULT_REGION=us-east-1 $(REBAR) compile_only=true eunit
+	$(MAKE) .dialyzer_plt
+	dialyzer --no_check_plt --fullpath \
+		$(CHECK_EUNIT_FILES) \
+		-I include \
+		--plt .dialyzer_plt
+else
 	@$(REBAR) as test dialyzer
 
 doc:
