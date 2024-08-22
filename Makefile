@@ -1,6 +1,6 @@
 .PHONY: all get-deps clean compile run eunit check check-eunit doc hex-publish rebar3-install
 
-REBAR=$(shell which rebar3 || echo ./rebar3)
+#REBAR=$(shell which rebar3 || echo ./rebar3)
 
 CHECK_FILES=\
 	ebin/*.beam
@@ -22,14 +22,15 @@ run:
 check_warnings:
 	@$(REBAR) as warnings compile
 
-warnings: deps
+warnings:
 ifeq ($(REBAR_VSN),2)
 	@WARNINGS_AS_ERRORS=true $(REBAR) compile
 	@AWS_DEFAULT_REGION=us-east-1 WARNINGS_AS_ERRORS=true $(REBAR) compile_only=true eunit
 else
 	@$(REBAR) as test compile
+endif
 
-eunit: deps
+eunit:
 ifeq ($(REBAR_VSN),2)
 	$(MAKE) compile
 	@AWS_DEFAULT_REGION=us-east-1 $(REBAR) eunit skip_deps=true
@@ -43,7 +44,7 @@ endif
 		--fullpath \
 		--output_plt .dialyzer_plt
 
-check: deps
+check:
 ifeq ($(REBAR_VSN),2)
 	$(MAKE) compile
 	@AWS_DEFAULT_REGION=us-east-1 $(REBAR) compile_only=true eunit
@@ -54,6 +55,7 @@ ifeq ($(REBAR_VSN),2)
 		--plt .dialyzer_plt
 else
 	@$(REBAR) as test dialyzer
+endif
 
 doc:
 	@$(REBAR) edoc
