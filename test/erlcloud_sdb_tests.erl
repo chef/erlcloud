@@ -121,8 +121,8 @@ select_all_single_response() ->
 select_all_failure() ->
     expect_chain([{error, {conn_failed,{error,ssl_not_started}}}]),
 
-    {'EXIT', {Error, _Stack}} = (catch erlcloud_sdb:select_all("select")),
-    ?assertEqual({aws_error,{socket_error,{conn_failed,{error,ssl_not_started}}}}, Error).
+    ?assertError({aws_error,{socket_error,{conn_failed,{error,ssl_not_started}}}},
+                 erlcloud_sdb:select_all("select")).
 
 select_all_503() ->
     expect_chain([unavailable_response(),

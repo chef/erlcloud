@@ -4,7 +4,7 @@
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.11.0">>},0},
  {<<"lhttpc">>,
   {git,"https://github.com/chef/lhttpc",
-       {branch,"CHEF-11677/CHEF-12498/lbaker"}},
+       {branch,"CHEF-37251/lbaker"}},
   0}]}.
 [
 {pkg_hash,[
